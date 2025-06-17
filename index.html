@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8" />
+  <title>Suno Music</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'iskoola pota', sans-serif;
+      background-color: #0e0e0e;
+      color: white;
+    }
+    h1 {
+      text-align: center;
+      color: #01e676;
+      margin-top: 20px;
+    }
+    .song-card {
+      background: #1c1c1c;
+      margin: 15px;
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 0 10px #00e67633;
+      transition: 0.2s;
+    }
+    .song-card:hover {
+      background:#ffb6c1;
+    }
+    .song-title {
+      flex: 1;
+      margin-left: 10px;
+    }
+    .play-btn, .playlist-btn {
+      background: #00e676;
+      color: #000;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .player, #youtubePlayer {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .lang-switch, .playlist-section {
+      text-align: center;
+      margin: 20px;
+    }
+    .lang-switch button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #544;
+      color: #ff0088;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .playlist-section ul {
+      list-style: none;
+      padding: 0;
+    }
+    .playlist-section li {
+      padding: 5px;
+    }
+    .remove-btn {
+      margin-left: 10px;
+      cursor: pointer;
+      background: #ff4444;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      padding: 2px 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔥 Trending Sinhala Songs</h1>
+
+  <div id="songList"></div>
+
+  <div class="player">
+    <p id="nowPlaying">🔊 Now Playing: None</p>
+    <audio id="audioPlayer" controls style="width: 90%; max-width: 400px;"></audio>
+  </div>
+
+  <div id="youtubePlayer"></div>
+
+  <div class="playlist-section">
+    <h3>🎶 My Playlist</h3>
+    <ul id="playlist"></ul>
+    <button class="playlist-btn" onclick="playPlaylist()">▶️ Play Playlist</button>
+  </div>
+
+  <div class="lang-switch">
+    <button onclick="loadSongs('si')">සිංහල</button>
+    <button onclick="loadSongs('en')">English</button>
+  </div>
+
+  <script>
+    const songs = {
+      si: [
+        { title: "මටත් ලියලා දෙන්න", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", type: "audio" },
+        { title: "නුඹට මා පිණිසයි", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", type: "audio" },
+        { title: "ඔබට මට පරම්පරාවක්", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", type: "audio" },
+        { title: "Suno AI Track", url: "https://suno.com/s/wdnNGVHO4nnpRpb1", type: "audio" },
+        { title: "DJ Remix 2025 (YouTube)", url: "https://youtu.be/TS_GNAFgdWs?si=QujQAqFIuIJTg5X1", type: "youtube" }
+      ],
+      en: [
+        { title: "Let Me Go", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", type: "audio" },
+        { title: "Fade Away", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", type: "audio" },
+        { title: "No More Lies", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", type: "audio" }
+      ]
+    };
+
+    const songList = document.getElementById("songList");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const nowPlaying = document.getElementById("nowPlaying");
+    const playlist = [];
+    const playlistElement = document.getElementById("playlist");
+    let currentIndex = 0;
+
+    function loadSongs(lang = 'si') {
+      songList.innerHTML = '';
+      document.getElementById('youtubePlayer').innerHTML = '';
+      audioPlayer.src = '';
+      audioPlayer.pause();
+      playlistElement.style.display = 'block';
+      songList.style.display = 'block';
+
+      songs[lang].forEach(song => {
+        const card = document.createElement('div');
+        card.className = 'song-card';
+        card.innerHTML = `
+          <span class="song-title">${song.title}</span>
+          <button class="play-btn" onclick="playSong('${song.url}', '${song.title}', '${song.type || "audio"}')">▶️ Play</button>
+          <button class="playlist-btn" onclick='addToPlaylist(${JSON.stringify(song)})'>➕ Add</button>
+        `;
+        songList.appendChild(card);
+      });
+    }
+
+    function playSong(url, title, type = "audio") {
+      if(type === "youtube") {
+        playYouTube(url, title);
+      } else {
+        document.getElementById('youtubePlayer').innerHTML = '';
+        playlistElement.style.display = 'block';
+        songList.style.display = 'block';
+
+        audioPlayer.src = url;
+        audioPlayer.play();
+        nowPlaying.textContent = "🔊 Now🎵 Playing: " + title;
+      }
+    }
+
+    function playYouTube(url, title) {
+      nowPlaying.textContent = "▶️ Now Playing (YouTube): " + title;
+      songList.style.display = "none";
+      playlistElement.style.display = "none";
+
+      const ytDiv = document.getElementById('youtubePlayer');
+      ytDiv.innerHTML = '';
+
+      const videoId = url.split('youtu.be/')[1].split('?')[0];
+
+      const iframe = document.createElement('iframe');
+      iframe.width = "320";
+      iframe.height = "180";
+      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`;
+      iframe.frameBorder = "0";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+      iframe.allowFullscreen = true;
+
+      ytDiv.appendChild(iframe);
+    }
+
+    function addToPlaylist(song) {
+      if (playlist.find(s => s.url === song.url)) {
+        alert("මෙම සින්දුව Playlist එකට දැනටමත් ඇතුළත්යි!");
+        return;
+      }
+      playlist.push(song);
+
+      const li = document.createElement('li');
+      li.textContent = song.title + " ";
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = "❌ Remove";
+      removeBtn.className = 'remove-btn';
+
+      removeBtn.onclick = () => {
+        const index = playlist.findIndex(s => s.url === song.url);
+        if (index > -1) {
+          playlist.splice(index, 1);
+          playlistElement.removeChild(li);
+        }
+      };
+
+      li.appendChild(removeBtn);
+      playlistElement.appendChild(li);
+    }
+
+    function playPlaylist() {
+      if (playlist.length === 0) return;
+      currentIndex = 0;
+      playNextInPlaylist();
+    }
+
+    function playNextInPlaylist() {
+      if (currentIndex >= playlist.length) {
+        currentIndex = 0; // loop playlist or stop
+        return;
+      }
+      const song = playlist[currentIndex];
+      playSong(song.url, song.title, song.type || "audio");
+      currentIndex++;
+      if (song.type !== "youtube") {
+        audioPlayer.onended = playNextInPlaylist;
+      }
+    }
+
+    loadSongs(); // Load Sinhala songs by default
+  </script>
+
+</body>
+</html>
